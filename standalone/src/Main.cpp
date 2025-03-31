@@ -78,8 +78,8 @@ int main (int argc, const char *argv[])
     {
       const std::string assetsPath
         = executablePath + "/" + static_cast<std::string> (UTILS_ASSET_PATH);
-      std::unique_ptr<library::EmojiTools> lib
-        = std::make_unique<library::EmojiTools> (assetsPath);
+      std::unique_ptr<EmojiSpace::EmojiTools> lib
+        = std::make_unique<EmojiSpace::EmojiTools> (assetsPath);
 
       LOG_I << lib->getRandomEmoji () << std::endl;
 

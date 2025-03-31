@@ -12,7 +12,7 @@
 
 #include "UnicodeEmojiTestTxt.hpp"
 
-namespace library
+namespace EmojiSpace
 {
   EmojiTools::EmojiTools (const std::string &assetsPath)
     : m_assetsPath (assetsPath)

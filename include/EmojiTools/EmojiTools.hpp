@@ -17,7 +17,7 @@ using char8_t = char; // C++17 and older
 
 #define EMOJI_BUFFER_SIZE 64
 
-namespace library
+namespace EmojiSpace
 {
   class EmojiTools
   {
