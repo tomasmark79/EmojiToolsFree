@@ -1,0 +1,16 @@
+<img src="assets/logo.png" alt="DotNameCpp Logo" width="20%">
+
+[![Linux](https://github.com/tomasmark79/EmojiToolsFree/actions/workflows/linux.yml/badge.svg)](https://github.com/tomasmark79/EmojiToolsFree/actions/workflows/linux.yml)
+[![MacOS](https://github.com/tomasmark79/EmojiToolsFree/actions/workflows/macos.yml/badge.svg)](https://github.com/tomasmark79/EmojiToolsFree/actions/workflows/macos.yml)
+[![Windows](https://github.com/tomasmark79/EmojiToolsFree/actions/workflows/windows.yml/badge.svg)](https://github.com/tomasmark79/EmojiToolsFree/actions/workflows/windows.yml)  
+
+# EmojiToolsFree
+
+is a simple library that handles retrieving UTF-8 emoji characters on demand.
+
+## License
+
+MIT License  
+Copyright (c) 2024-2025 Tomáš Mark
+
+[👆🏻](#EmojiToolsFree)
