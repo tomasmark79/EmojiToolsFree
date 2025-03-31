@@ -8,6 +8,24 @@
 
 is a simple library that handles retrieving UTF-8 emoji characters on demand.
 
+## Usage
+
+```cmake
+
+CPMAddPackage(
+    NAME EmojiToolsFree
+    GITHUB_REPOSITORY tomasmark79/EmojiToolsFreeFree
+    GIT_TAG main)
+
+target_link_libraries(
+    ${LIBRARY_NAME}
+    PUBLIC dsdotname::EmojiToolsFree)
+```
+
+```cpp
+    std::shared_ptr<EmojiSpace::EmojiToolsFree> emojiTools
+      = std::make_shared<EmojiSpace::EmojiToolsFree>(assetsPath);
+```
 ## License
 
 MIT License  
