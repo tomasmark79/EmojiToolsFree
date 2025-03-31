@@ -14,8 +14,8 @@ is a simple library that handles retrieving UTF-8 emoji characters on demand.
 
 CPMAddPackage(
     NAME EmojiToolsFree
-    GITHUB_REPOSITORY tomasmark79/EmojiToolsFreeFree
-    GIT_TAG main)
+    GITHUB_REPOSITORY tomasmark79/EmojiToolsFree
+    GIT_TAG Freemain)
 
 target_link_libraries(
     ${LIBRARY_NAME}
