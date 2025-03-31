@@ -8,24 +8,33 @@
 
 is a simple library that handles retrieving UTF-8 emoji characters on demand.
 
-## Usage
+## Usage this project by other projects like the library
 
-```cmake
+### Simply use the commands provided below.
 
-CPMAddPackage(
+  #### CMakeLists.txt
+
+  ```cmake
+  CPMAddPackage(
     NAME EmojiToolsFree
-    GITHUB_REPOSITORY tomasmark79/EmojiToolsFree
-    GIT_TAG Freemain)
+    GITHUB_REPOSITORY tomasmark79/EmojiToolsFreeFree
+    GIT_TAG main
+  )
+  file(COPY ${EmojiToolsFree_SOURCE_DIR}/assets DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(
+  target_link_libraries(
     ${LIBRARY_NAME}
-    PUBLIC dsdotname::EmojiToolsFree)
-```
+    PUBLIC dsdotname::EmojiToolsFree
+  )
+  ```
 
-```cpp
-    std::shared_ptr<EmojiSpace::EmojiToolsFree> emojiTools
-      = std::make_shared<EmojiSpace::EmojiToolsFree>(assetsPath);
-```
+  #### C++
+
+  ```cpp
+    std::shared_ptr<EmojiSpace::EmojiToolsFree> /*💋*/ emojiTools
+      = std::make_shared<EmojiSpace::EmojiToolsFree> (m_assetsPath);
+  ```
+  
 ## License
 
 MIT License  
