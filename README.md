@@ -20,7 +20,7 @@ is a simple library that handles retrieving UTF-8 emoji characters on demand.
     GITHUB_REPOSITORY tomasmark79/EmojiToolsFree
     GIT_TAG main
   )
-  file(COPY ${EmojiToolsFree_SOURCE_DIR}/assets DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
+  file(COPY ${ETools_SOURCE_DIR}/assets DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
 
   target_link_libraries(
     ${LIBRARY_NAME}
