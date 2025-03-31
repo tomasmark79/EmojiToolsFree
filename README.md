@@ -1,5 +1,3 @@
-<img src="assets/logo.png" alt="DotNameCpp Logo" width="20%">
-
 [![Linux](https://github.com/tomasmark79/EmojiToolsFree/actions/workflows/linux.yml/badge.svg)](https://github.com/tomasmark79/EmojiToolsFree/actions/workflows/linux.yml)
 [![MacOS](https://github.com/tomasmark79/EmojiToolsFree/actions/workflows/macos.yml/badge.svg)](https://github.com/tomasmark79/EmojiToolsFree/actions/workflows/macos.yml)
 [![Windows](https://github.com/tomasmark79/EmojiToolsFree/actions/workflows/windows.yml/badge.svg)](https://github.com/tomasmark79/EmojiToolsFree/actions/workflows/windows.yml)  
@@ -34,6 +32,12 @@ is a simple library that handles retrieving UTF-8 emoji characters on demand.
     std::shared_ptr<EmojiSpace::EmojiToolsFree> /*💋*/ emojiTools
       = std::make_shared<EmojiSpace::EmojiToolsFree> (m_assetsPath);
   ```
+
+---
+
+<img src="assets/logo.png" alt="DotNameCpp Logo" width="20%">
+
+**[DotName C++ Template](https://github.com/tomasmark79/DotNameCppFree)** – A template for modern C++ projects using CMake. 🚀 It includes pre-configured build settings, modular project structure, and support for modern C++ standards. Perfect for creating clean, maintainable, and scalable projects. 🛠️
 
 ## License
 
