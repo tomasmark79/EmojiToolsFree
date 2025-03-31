@@ -16,15 +16,15 @@ is a simple library that handles retrieving UTF-8 emoji characters on demand.
 
   ```cmake
   CPMAddPackage(
-    NAME EmojiToolsFree
-    GITHUB_REPOSITORY tomasmark79/EmojiToolsFreeFree
+    NAME ETools
+    GITHUB_REPOSITORY tomasmark79/EmojiToolsFree
     GIT_TAG main
   )
   file(COPY ${EmojiToolsFree_SOURCE_DIR}/assets DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
 
   target_link_libraries(
     ${LIBRARY_NAME}
-    PUBLIC dsdotname::EmojiToolsFree
+    PUBLIC dsdotname::ETools
   )
   ```
 
@@ -34,7 +34,7 @@ is a simple library that handles retrieving UTF-8 emoji characters on demand.
     std::shared_ptr<EmojiSpace::EmojiToolsFree> /*💋*/ emojiTools
       = std::make_shared<EmojiSpace::EmojiToolsFree> (m_assetsPath);
   ```
-  
+
 ## License
 
 MIT License  
