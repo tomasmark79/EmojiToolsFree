@@ -40,7 +40,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # ==============================================================================
 set(LIBRARY_NAME EmojiTools)
 string(TOLOWER "${LIBRARY_NAME}" LIBRARY_NAME_LOWER)
-set(LIBRARY_NAMESPACE dsdotname)
+set(LIBRARY_NAMESPACE dotname)
 project(
     ${LIBRARY_NAME}
     VERSION 0.0.1
