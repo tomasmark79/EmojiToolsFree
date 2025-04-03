@@ -24,7 +24,7 @@ namespace dotname {
 
       // https://www.unicode.org/Public/draft/emoji/emoji-test.txt
 
-      std::string emojiTestFileDefinition = std::string (assetsPath_) + "/emoji-test.txt";
+      std::string emojiTestFileDefinition = assetsPath_.string() + "/emoji-test.txt";
 
       std::ifstream is (emojiTestFileDefinition);
       if (!is) {
