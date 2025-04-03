@@ -38,13 +38,13 @@ int processArguments (int argc, const char* argv[]) {
     const auto result = options->parse (argc, argv);
 
     if (result.count ("help")) {
-      LOG_I << options->help ({ "", "Group" }) << std::endl;
+      LOG_I_STREAM << options->help ({ "", "Group" }) << std::endl;
       return 0;
     }
 
     if (result["log2file"].as<bool> ()) {
       LOG.enableFileLogging (std::string (Config::standaloneName) + ".log");
-      LOG_D << "Logging to file enabled [-2]" << std::endl;
+      LOG_D_STREAM << "Logging to file enabled [-2]" << std::endl;
     }
 
     if (!result.count ("omit")) {
@@ -52,32 +52,32 @@ int processArguments (int argc, const char* argv[]) {
       // LOG_D << Config::assetsPath << std::endl;
       uniqueLib = std::make_unique<dotname::EmojiTools> (Config::assetsPath);
 
-      LOG_I << uniqueLib->getRandomEmoji () << std::endl;
-      LOG_I << uniqueLib->getEmojiesFromGroup ("Smileys & Emotion");
-      LOG_I << uniqueLib->getEmojiesFromGroup ("People & Body");
-      LOG_I << uniqueLib->getEmojiesFromGroup ("Component");
-      LOG_I << uniqueLib->getEmojiesFromGroup ("Animals & Nature");
-      LOG_I << uniqueLib->getEmojiesFromGroup ("Food & Drink");
-      LOG_I << uniqueLib->getEmojiesFromGroup ("Travel & Places");
-      LOG_I << uniqueLib->getEmojiesFromGroup ("Activities");
-      LOG_I << uniqueLib->getEmojiesFromGroup ("Objects");
-      LOG_I << uniqueLib->getEmojiesFromGroup ("Symbols");
-      LOG_I << uniqueLib->getEmojiesFromGroup ("Flags") << std::endl;
+      LOG_I_STREAM << uniqueLib->getRandomEmoji () << std::endl;
+      LOG_I_STREAM << uniqueLib->getEmojiesFromGroup ("Smileys & Emotion");
+      LOG_I_STREAM << uniqueLib->getEmojiesFromGroup ("People & Body");
+      LOG_I_STREAM << uniqueLib->getEmojiesFromGroup ("Component");
+      LOG_I_STREAM << uniqueLib->getEmojiesFromGroup ("Animals & Nature");
+      LOG_I_STREAM << uniqueLib->getEmojiesFromGroup ("Food & Drink");
+      LOG_I_STREAM<< uniqueLib->getEmojiesFromGroup ("Travel & Places");
+      LOG_I_STREAM << uniqueLib->getEmojiesFromGroup ("Activities");
+      LOG_I_STREAM << uniqueLib->getEmojiesFromGroup ("Objects");
+      LOG_I_STREAM << uniqueLib->getEmojiesFromGroup ("Symbols");
+      LOG_I_STREAM << uniqueLib->getEmojiesFromGroup ("Flags") << std::endl;
 
     } else {
-      LOG_D << "Loading library omitted [-1]" << std::endl;
+      LOG_D_STREAM << "Loading library omitted [-1]" << std::endl;
     }
 
     if (!result.unmatched ().empty ()) {
       for (const auto& arg : result.unmatched ()) {
-        LOG_E << "Unrecognized option: " << arg << std::endl;
+        LOG_E_STREAM << "Unrecognized option: " << arg << std::endl;
       }
-      LOG_I << options->help () << std::endl;
+      LOG_I_STREAM << options->help () << std::endl;
       return 1;
     }
 
   } catch (const cxxopts::exceptions::exception& e) {
-    LOG_E << "error parsing options: " << e.what () << std::endl;
+    LOG_E_STREAM << "error parsing options: " << e.what () << std::endl;
     return 1;
   }
   return 0;
@@ -85,7 +85,7 @@ int processArguments (int argc, const char* argv[]) {
 
 int main (int argc, const char* argv[]) {
   LOG.noHeader (true);
-  LOG_I << "Starting " << Config::standaloneName << " ..." << std::endl;
+  LOG_I_STREAM << "Starting " << Config::standaloneName << " ..." << std::endl;
   if (processArguments (argc, argv) != 0) {
     return 1;
   }

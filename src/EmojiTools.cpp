@@ -13,13 +13,13 @@
 namespace dotname {
 
   EmojiTools::EmojiTools () {
-    LOG_D << libName << " ...constructed" << std::endl;
+    LOG_D_STREAM << libName << " ...constructed" << std::endl;
   }
   EmojiTools::EmojiTools (const std::filesystem::path& assetsPath) : EmojiTools () {
     assetsPath_ = assetsPath;
 
     if (!assetsPath_.empty ()) {
-      LOG_D << "Assets path: " << assetsPath_ << std::endl;
+      LOG_D_STREAM << "Assets path: " << assetsPath_ << std::endl;
       std::mt19937 gen (rd ());
 
       // https://www.unicode.org/Public/draft/emoji/emoji-test.txt
@@ -28,7 +28,7 @@ namespace dotname {
 
       std::ifstream is (emojiTestFileDefinition);
       if (!is) {
-        LOG_E << "Emoji asset test file not found. Loading hardcoded definition." << std::endl;
+        LOG_E_STREAM << "Emoji asset test file not found. Loading hardcoded definition." << std::endl;
         std::istringstream ss (UnicodeEmojiTestTxtContent);
         constructEmojiPropertiesMap (m_emojiPropertiesMap, static_cast<std::istream&> (ss));
       } else {
@@ -36,12 +36,11 @@ namespace dotname {
         constructEmojiPropertiesMap (m_emojiPropertiesMap, is);
       }
     } else {
-      LOG_D << "Assets path is empty" << std::endl;
+      LOG_D_STREAM << "Assets path is empty" << std::endl;
     }
   }
   EmojiTools::~EmojiTools () {
-    // !!!TODO!!!
-    // LOG_D_DESTRUCTOR (EmojiTools) << libName << " ...destructed" << std::endl;
+    LOG_D_STREAM << libName << " ...destructed" << std::endl;
   }
 
   char8_t* EmojiTools::encodeUtf8 (char32_t emojiCodePoint, char8_t* buffer8_t) {

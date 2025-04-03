@@ -50,7 +50,7 @@ namespace Utils {
         file_stream << file.rdbuf ();
         file.close ();
       } catch (const std::ifstream::failure& e) {
-        LOG_E << e.what () << std::endl;
+        LOG_E_STREAM << e.what () << std::endl;
       }
       return file_stream.str ();
     }

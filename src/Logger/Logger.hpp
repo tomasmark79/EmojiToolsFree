@@ -1,5 +1,6 @@
 // MIT License
 // Copyright (c) 2024-2025 Tomáš Mark
+// Thread safe logger class
 
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
@@ -63,9 +64,6 @@ class Logger {
 
 private:
   std::mutex logMutex_;
-
-private:
-  std::string caller_;
   std::ostringstream messageStream_;
   std::ofstream logFile_;
 
@@ -73,18 +71,17 @@ protected:
   Logger () = default;
   ~Logger () {
     std::lock_guard<std::mutex> lock (logMutex_);
-    // if (logFile_.is_open ()) {
-    //   logFile_.close ();
-    // }
+    if (logFile_.is_open ()) {
+      logFile_.close ();
+    }
   }
 
 public:
-  Logger (const Logger&) = delete;            // Logger a; Logger b(a);
-  Logger (Logger&&) = delete;                 // Logger a; Logger b(std::move(a));
-  Logger& operator= (const Logger&) = delete; // Logger a, b; a = b;
-  Logger& operator= (Logger&&) = delete;      // Logger a, b; a = std::move(b);
-  static Logger& getInstance ()               // Singleton pattern
-  {
+  Logger (const Logger&) = delete;
+  Logger (Logger&&) = delete;
+  Logger& operator= (const Logger&) = delete;
+  Logger& operator= (Logger&&) = delete;
+  static Logger& getInstance () {
     static Logger instance;
     return instance;
   }
@@ -94,51 +91,6 @@ public:
 
 private:
   Level currentLevel_ = Level::LOG_INFO;
-
-public:
-  Logger& operator<< (Level level) // Logger a; a << Logger::Level::LOG_DEBUG;
-  {
-    currentLevel_ = level;
-    return *this;
-  }
-
-  // Logger a; a << std::endl;
-  Logger& operator<< (std::ostream& (*outputManipulator) (std::ostream&)) {
-    if (outputManipulator == static_cast<std::ostream& (*)(std::ostream&)> (std::endl)) {
-      log (currentLevel_, messageStream_.str (), caller_);
-      // Reset state
-      messageStream_.str ("");
-      messageStream_.clear ();
-      caller_ = "";
-    } else {
-      messageStream_ << outputManipulator;
-    }
-    return *this;
-  }
-
-  // Logger a; a << "message";
-  template <typename T> Logger& operator<< (const T& message) {
-    std::lock_guard<std::mutex> lock (logMutex_);
-    messageStream_ << message;
-    return *this;
-  }
-
-  // Logger a; a.setCaller(FUNCTION_NAME);
-  Logger& setCaller (const std::string& caller) {
-    std::lock_guard<std::mutex> lock (logMutex_);
-    try {
-      // Vytvoření explicitní kopie vstupního parametru
-      std::string callerCopy = caller.empty () ? "Unknown" : caller;
-      caller_ = callerCopy;
-    } catch (const std::exception& e) {
-      std::cerr << "Error setting caller: " << e.what () << std::endl;
-      caller_ = "Error in caller"; // Nastavit bezpečnou hodnotu
-    } catch (...) {
-      std::cerr << "Unknown error setting caller" << std::endl;
-      caller_ = "Unknown error in caller"; // Nastavit bezpečnou hodnotu
-    }
-    return *this;
-  }
 
 public:
   void debug (const std::string& message, const std::string& caller = "") {
@@ -163,43 +115,33 @@ public:
 
   void log (Level level, const std::string& message, const std::string& caller = "") {
     std::lock_guard<std::mutex> lock (logMutex_);
-
     auto now = std::chrono::system_clock::now ();
     auto now_time = std::chrono::system_clock::to_time_t (now);
-
-    // Use thread-safe localtime
     std::tm now_tm;
 #ifdef _WIN32
     localtime_s (&now_tm, &now_time);
 #else
     localtime_r (&now_time, &now_tm);
 #endif
-
-    // Output to appropriate stream
+    // Výstup na konzoli
     if (level == Level::LOG_ERROR || level == Level::LOG_CRITICAL) {
       logToStream (std::cerr, level, message, caller, now_tm);
-    } else if (level == Level::LOG_DEBUG || level == Level::LOG_INFO
-               || level == Level::LOG_WARNING) {
+    } else {
       logToStream (std::cout, level, message, caller, now_tm);
     }
-
-    // file output
+    // Výstup do souboru, pokud je povolen
     if (logFile_.is_open ()) {
       logFile_ << "[" << std::put_time (&now_tm, "%d-%m-%Y %H:%M:%S") << "] ";
-      if (!caller.empty ()) {
-        logFile_ << "[" << caller << "] ";
-      } else {
-        logFile_ << "[" << "empty caller" << "] ";
-      }
+      logFile_ << "[" << (caller.empty () ? "empty caller" : caller) << "] ";
       logFile_ << "[" << levelToString (level) << "] " << message << std::endl;
     }
   }
 
-public:
   template <typename... Args>
-  void logFmtMessage (Level level, const std::string& format, Args&&... args) {
+  void logFmtMessage (Level level, const std::string& format, const std::string& caller,
+                      Args&&... args) {
     std::string message = fmt::format (format, std::forward<Args> (args)...);
-    log (level, message, caller_);
+    log (level, message, caller);
   }
 
 public:
@@ -249,7 +191,7 @@ public:
     SetConsoleTextAttribute (GetStdHandle (STD_OUTPUT_HANDLE),
                              FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 #else
-    std::cout << "\033[0m"; // Reset
+    std::cout << "\033[0m";
 #endif
   }
 
@@ -261,7 +203,6 @@ public:
             { Level::LOG_WARNING, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY },
             { Level::LOG_ERROR, FOREGROUND_RED | FOREGROUND_INTENSITY },
             { Level::LOG_CRITICAL, FOREGROUND_RED | FOREGROUND_INTENSITY | FOREGROUND_BLUE } };
-
     auto it = colorMap.find (level);
     if (it != colorMap.end ()) {
       SetConsoleTextAttribute (GetStdHandle (STD_OUTPUT_HANDLE), it->second);
@@ -276,7 +217,6 @@ public:
                                                            { Level::LOG_WARNING, "\033[33m" },
                                                            { Level::LOG_ERROR, "\033[31m" },
                                                            { Level::LOG_CRITICAL, "\033[95m" } };
-
     auto it = colorMap.find (level);
     if (it != colorMap.end ()) {
       std::cout << it->second;
@@ -285,6 +225,7 @@ public:
     }
   }
 #endif
+
   void setConsoleColor (Level level) {
 #ifdef _WIN32
     setConsoleColorWindows (level);
@@ -300,7 +241,33 @@ private:
   bool includeCaller_ = true;
   bool includeLevel_ = true;
 
+  void logToStream (std::ostream& stream, Level level, const std::string& message,
+                    const std::string& caller, const std::tm& now_tm) {
+    setConsoleColor (level);
+    stream << buildHeader (now_tm, caller, level) << message;
+    resetConsoleColor ();
+    stream << std::endl; // přidání nového řádku
+  }
+
+  std::string buildHeader (const std::tm& now_tm, const std::string& caller, Level level) const {
+    std::ostringstream header;
+    if (includeName_) {
+      header << "[" << headerName_ << "] ";
+    }
+    if (includeTime_) {
+      header << "[" << std::put_time (&now_tm, "%d-%m-%Y %H:%M:%S") << "] ";
+    }
+    if (includeCaller_ && !caller.empty ()) {
+      header << "[" << caller << "] ";
+    }
+    if (includeLevel_) {
+      header << "[" << levelToString (level) << "] ";
+    }
+    return header.str ();
+  }
+
 public:
+  // Metody pro nastavení záhlaví zůstávají stejné
   void setHeaderName (const std::string& headerName) {
     std::lock_guard<std::mutex> lock (logMutex_);
     headerName_ = headerName;
@@ -334,116 +301,76 @@ public:
       showHeaderLevel (true);
     }
   }
-  void visibleHeaders (bool inlcudeName, bool includeTime, bool includeCaller, bool includeLevel) {
-    showHeaderName (inlcudeName);
-    showHeaderTime (includeTime);
-    showHeaderCaller (includeCaller);
-    showHeaderLevel (includeLevel);
+  void visibleHeaders (bool incName, bool incTime, bool incCaller, bool incLevel) {
+    showHeaderName (incName);
+    showHeaderTime (incTime);
+    showHeaderCaller (incCaller);
+    showHeaderLevel (incLevel);
   }
 
-  void logToStream (std::ostream& stream, Level level, const std::string& message,
-                    const std::string& caller, const std::tm& now_tm) {
+public:
+  class LogStream {
+  public:
+    LogStream (Logger& logger, Level level, const std::string& caller)
+        : logger_ (logger), level_ (level), caller_ (caller) {
+    }
+    ~LogStream () {
+      // Na konci řetězce zavoláme logování
+      logger_.log (level_, oss_.str (), caller_);
+    }
+    template <typename T> LogStream& operator<< (const T& value) {
+      oss_ << value;
+      return *this;
+    }
+    // Přetížení pro manipulátory (např. std::endl)
+    LogStream& operator<< (std::ostream& (*manip) (std::ostream&)) {
+      oss_ << manip;
+      return *this;
+    }
 
-    setConsoleColor (level);
-    if (includeName_) {
-      stream << "[" << headerName_ << "] ";
-    }
-    if (includeTime_) {
-      stream << "[" << std::put_time (&now_tm, "%d-%m-%Y %H:%M:%S") << "] ";
-    }
-    if (includeCaller_) {
-      if (!caller.empty ()) {
-        stream << "[" << caller << "] ";
-      }
-    }
-    if (includeLevel_) {
-      stream << "[" << levelToString (level) << "] ";
-    }
-    stream << message;
-    resetConsoleColor ();
-    stream << std::endl;
+  private:
+    Logger& logger_;
+    Level level_;
+    std::string caller_;
+    std::ostringstream oss_;
+  };
+
+  // Metoda, která vrací objekt LogStream pro streamové logování
+  LogStream stream (Level level, const std::string& caller = "") {
+    return LogStream (*this, level, caller);
   }
-
 }; // class Logger
 
-// Macro definitions
+// clang-format off
+  #define LOG Logger::getInstance()
 
-#define LOG Logger::getInstance ()
-#define LOG_WITH_CALLER LOG.setCaller (FUNCTION_NAME)
-
-// stream debug
-#if !defined(NDEBUG) || defined(_DEBUG) || defined(DEBUG)
-  #define LOG_D Logger::getInstance ().setCaller (FUNCTION_NAME) << Logger::Level::LOG_DEBUG
-    // safe caller
-  #define LOG_D_DESTRUCTOR(className) \
-    Logger::getInstance ().setCaller ("~" #className "::" #className) << Logger::Level::LOG_DEBUG
+#ifndef NDEBUG
+  #define LOG_D_STREAM Logger::getInstance().stream(Logger::Level::LOG_DEBUG, FUNCTION_NAME)
+  #define LOG_D_MSG(msg) Logger::getInstance().debug(msg, FUNCTION_NAME)
+  #define LOG_D_FMT(format, ...) Logger::getInstance().logFmtMessage(Logger::Level::LOG_DEBUG, format, FUNCTION_NAME, __VA_ARGS__)
 #else
-  #define LOG_D \
-    if (false)  \
-    Logger::getInstance ().setCaller (FUNCTION_NAME) << Logger::Level::LOG_DEBUG
-    // safe caller
-  #define LOG_D_DESTRUCTOR(className) \
-    if (false)                        \
-    Logger::getInstance ().setCaller ("~" #className "::" #className) << Logger::Level::LOG_DEBUG
+  #define LOG_D_STREAM if(0) Logger::getInstance().stream(Logger::Level::LOG_DEBUG, FUNCTION_NAME)
+  #define LOG_D_MSG(msg) do {} while(0)
+  #define LOG_D_FMT(format, ...) do {} while(0)
 #endif
-
-//stream
-#define LOG_I Logger::getInstance ().setCaller (FUNCTION_NAME) << Logger::Level::LOG_INFO
-#define LOG_W Logger::getInstance ().setCaller (FUNCTION_NAME) << Logger::Level::LOG_WARNING
-#define LOG_E Logger::getInstance ().setCaller (FUNCTION_NAME) << Logger::Level::LOG_ERROR
-#define LOG_C Logger::getInstance ().setCaller (FUNCTION_NAME) << Logger::Level::LOG_CRITICAL
-
-// functional debug
-#if !defined(NDEBUG) || defined(_DEBUG) || defined(DEBUG)
-  #define LOG_D_MSG(msg) Logger::getInstance ().debug (msg, FUNCTION_NAME)
-  // safe caller
-  #define LOG_D_DESTRUCTOR_MSG(className, msg) \
-    Logger::getInstance ().debug (std::string (msg), "~" #className "::" #className)
-#else
-  #define LOG_D_MSG(msg) ((void)0)
-  // safe caller
-  #define LOG_D_DESTRUCTOR_MSG(className, msg) ((void)0)
-#endif
-
-// functional
-#define LOG_I_MSG(msg) Logger::getInstance ().info (msg, FUNCTION_NAME)
-#define LOG_W_MSG(msg) Logger::getInstance ().warning (msg, FUNCTION_NAME)
-#define LOG_E_MSG(msg) Logger::getInstance ().error (msg, FUNCTION_NAME)
-#define LOG_C_MSG(msg) Logger::getInstance ().critical (msg, FUNCTION_NAME)
-
-// fmt debug
-#if !defined(NDEBUG) || defined(_DEBUG) || defined(DEBUG)
-  #define LOG_D_FMT(format, ...)   \
-    Logger::getInstance ()         \
-        .setCaller (FUNCTION_NAME) \
-        .logFmtMessage (Logger::Level::LOG_DEBUG, format, __VA_ARGS__)
-    // safe caller
-  #define LOG_D_DESTRUCTOR_FMT(className, format, ...) \
-    Logger::getInstance ()                             \
-        .setCaller ("~" #className "::" #className)    \
-        .logFmtMessage (Logger::Level::LOG_DEBUG, format, __VA_ARGS__)
-#else
-  #define LOG_D_FMT(format, ...) ((void)0)
-  // safe caller
-  #define LOG_D_DESTRUCTOR_FMT(className, format, ...) ((void)0)
-#endif
-
-// fmt
-#define LOG_I_FMT(format, ...)   \
-  Logger::getInstance ()         \
-      .setCaller (FUNCTION_NAME) \
-      .logFmtMessage (Logger::Level::LOG_INFO, format, __VA_ARGS__)
-#define LOG_W_FMT(format, ...)   \
-  Logger::getInstance ()         \
-      .setCaller (FUNCTION_NAME) \
-      .logFmtMessage (Logger::Level::LOG_WARNING, format, __VA_ARGS__)
-#define LOG_E_FMT(format, ...)   \
-  Logger::getInstance ()         \
-      .setCaller (FUNCTION_NAME) \
-      .logFmtMessage (Logger::Level::LOG_ERROR, format, __VA_ARGS__)
-#define LOG_C_FMT(format, ...)   \
-  Logger::getInstance ()         \
-      .setCaller (FUNCTION_NAME) \
-      .logFmtMessage (Logger::Level::LOG_CRITICAL, format, __VA_ARGS__)
+  
+  //#define LOG_D_STREAM Logger::getInstance().stream(Logger::Level::LOG_DEBUG, FUNCTION_NAME)
+  #define LOG_I_STREAM Logger::getInstance().stream(Logger::Level::LOG_INFO, FUNCTION_NAME)
+  #define LOG_W_STREAM Logger::getInstance().stream(Logger::Level::LOG_WARNING, FUNCTION_NAME)
+  #define LOG_E_STREAM Logger::getInstance().stream(Logger::Level::LOG_ERROR, FUNCTION_NAME)
+  #define LOG_C_STREAM Logger::getInstance().stream(Logger::Level::LOG_CRITICAL, FUNCTION_NAME)
+  
+  //#define LOG_D_MSG(msg) Logger::getInstance().debug(msg, FUNCTION_NAME)
+  #define LOG_I_MSG(msg) Logger::getInstance().info(msg, FUNCTION_NAME)
+  #define LOG_W_MSG(msg) Logger::getInstance().warning(msg, FUNCTION_NAME)
+  #define LOG_E_MSG(msg) Logger::getInstance().error(msg, FUNCTION_NAME)
+  #define LOG_C_MSG(msg) Logger::getInstance().critical(msg, FUNCTION_NAME)
+  
+  //#define LOG_D_FMT(format, ...) Logger::getInstance().logFmtMessage(Logger::Level::LOG_DEBUG, format, FUNCTION_NAME, __VA_ARGS__)
+  #define LOG_I_FMT(format, ...) Logger::getInstance().logFmtMessage(Logger::Level::LOG_INFO, format, FUNCTION_NAME, __VA_ARGS__)
+  #define LOG_W_FMT(format, ...) Logger::getInstance().logFmtMessage(Logger::Level::LOG_WARNING, format, FUNCTION_NAME, __VA_ARGS__)
+  #define LOG_E_FMT(format, ...) Logger::getInstance().logFmtMessage(Logger::Level::LOG_ERROR, format, FUNCTION_NAME, __VA_ARGS__)
+  #define LOG_C_FMT(format, ...) Logger::getInstance().logFmtMessage(Logger::Level::LOG_CRITICAL, format, FUNCTION_NAME, __VA_ARGS__)
+// clang-format on
 
 #endif // LOGGER_HPP
